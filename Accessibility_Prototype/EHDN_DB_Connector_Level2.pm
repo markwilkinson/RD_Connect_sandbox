@@ -76,15 +76,33 @@ sub getRecordIds {
     return \@ids;
 }
 
-sub mapTableData {
+sub getData {
+    my ($self, $record) = @_;
     # no sanity checking in here... there should be!
     my $excel = Spreadsheet::XLSX->new($db_file);
     my $sheet = shift (@{$excel -> {Worksheet}});
-    
-    my %CDEs = {
-        'dc:id' => "",
+    my %metadata;
+    foreach my $row ($sheet -> {MinRow} .. $sheet -> {MaxRow}) {
         
-        }
+        next unless $sheet -> {Cells} [$row][0]->{Val} eq $record;
+
+        my $cell = $sheet -> {Cells} [$row] [5];
+          $metadata{'dcat:updateDate'} = $cell->{Val};
+
+        $cell = $sheet -> {Cells} [$row] [1];
+          $metadata{'dcat:releaseDate'} = $cell->{Val};
+          
+        $cell = $sheet -> {Cells} [$row] [3];
+          $metadata{'database:enrollmentState'} = $cell->{Val};
+
+          last;
+    }
+    my $response  = encode_json(\%metadata);
+    
+    return $response;
+#subject	created	site	subject_state	visit	svstdtc	visit_state	visit_id	nr	enr	mhterm__term	mhterm__modify	mhterm__decod	mhterm__certainty	mhbodsys	mhstdtc	mhenrf	mhendtc	mhscat
+#479-467-29X	13-Feb-15	test	violator	General	13-Feb-15	signed	61499	1	1	Tension-type headache	Tension-type headache	G44.2	manual	3	1996	1		4
+#768-599-467	5-Aug-13	test	enrolled	General	5-Aug-13	signed	46200	1	1	Allergic rhinitis due to pollen	Allergic rhinitis due to pollen	J30.1	manual	13	2000	1		6
     
 }
 1;

@@ -15,7 +15,7 @@ unless ($ENV{REQUEST_METHOD}){  # if running from command line
         $ENV{REQUEST_METHOD} = "GET";
         $ENV{'REQUEST_URI'} = "/this/thing";
         $ENV{'SERVER_NAME'} = "antirrhinum.net";
-	$ENV{'PATH_INFO'} = "";
+	$ENV{'PATH_INFO'} = "/479-467-29X";
 }
 
 
@@ -106,23 +106,35 @@ sub manageResourceGET {
     
     my $statement = statement($URL, $NS->rdf("type"), $NS->edam("data_0006")); 
     $model->add_statement($statement); 
-    $statement = statement($URL, $NS->rdf("type"), $NS->sio("SIO_000088")); 
+    $statement = statement($URL, $NS->rdf("type"), $	NS->sio("SIO_000088")); 
     $model->add_statement($statement); 
     $statement = statement($URL, $NS->dcat("distribution"), "http://biordf.org/cgi-bin/RD_Connect/patient_record/$record"); 
     $model->add_statement($statement); 
     
-    
+	callDataAccessor($URL, $model, $record);
 
-    $statement = statement("http://biordf.org/cgi-bin/RD_Connect/patient_record/$record",  $NS->rdf("type"), $NS->dcat('Distribution')); 
-    $model->add_statement($statement); 
-    $statement = statement("http://biordf.org/cgi-bin/RD_Connect/patient_record/$record",  $NS->dc("format"), "application/xml"); 
-    $model->add_statement($statement); 
-    $statement = statement("http://biordf.org/cgi-bin/RD_Connect/patient_record/$record",  $NS->dcat("downloadURL"), "http://antirrhinum.net/cgi-bin/ace/generic/xml/DragonDB?name=$allele;class=Allele"); 
-    $model->add_statement($statement); 
+	serializeThis($model);
 
-
-    
-    serializeThis($model);
 }
 
     
+
+sub callDataAccessor {
+	my ($subject, $model, $record) = @_;
+	require $Configuration{'DataSourceConnectorFile'};
+	my $package = $Configuration{'DataSourceConnectorPackage'};
+	my $method = $Configuration{'DataSourceDataMethod'};
+	no strict 'refs';
+	my $result = $package->$method($record);
+	$result = decode_json($result);
+	use strict 'refs';
+	
+    foreach my $key(keys %$result){
+	my ($ns,$pred) = split /:/, $key;
+	my $value = $result->{$key};
+	my $statement = statement("$URL",  $NS->$ns($pred), $value); 
+	$model->add_statement($statement); 
+
+    }
+
+}
