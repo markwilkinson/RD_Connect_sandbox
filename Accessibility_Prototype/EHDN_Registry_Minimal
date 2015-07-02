@@ -1,0 +1,143 @@
+#!/usr/bin/perl -w
+
+#  this is an example of a FAIR Linked Data Platform server
+
+use strict;
+
+use URI::Escape;
+use RDF::Trine;
+use RDF::Trine::Node::Resource;
+use RDF::Trine::Node::Literal;
+use RDF::Trine::Statement;
+use RDF::NS '20131205';              # check at compile time
+use JSON;	
+
+use RD_Connect_Common;
+
+
+my %Configuration = readConfiguration();  # read the configuration file (currently no sanity checking)
+
+
+my $NS = RDF::NS->new();  # used to get the RDF namespaces for the various terms
+
+#
+#unless ($ENV{REQUEST_METHOD}){  # if running from command line
+#        $ENV{REQUEST_METHOD} = "GET";
+#        $ENV{'REQUEST_URI'} = "/this/thing";
+#        $ENV{'SERVER_NAME'} = "antirrhinum.net";
+#	$ENV{'PATH_INFO'} = "";
+#}
+
+
+my $URL = "http://" . $ENV{'SERVER_NAME'} . $ENV{'REQUEST_URI'} ; 
+
+# THIS ROUTINE WILL BE SHARED BY ALL SERVERS
+if ($ENV{REQUEST_METHOD} eq "HEAD") {
+    manageHEAD($Configuration{ETAG});
+    exit;
+} elsif ($ENV{REQUEST_METHOD} eq "OPTIONS"){
+    manageHEAD($Configuration{ETAG});
+    exit;
+}  elsif ($ENV{REQUEST_METHOD} eq "GET") {
+	if ($ENV{'PATH_INFO'}) {  # this will never happen with the minimal server
+		printResourceHeader($Configuration{ETAG});
+		manageResourceGET($URL);
+	} else {
+		printContainerHeader($Configuration{ETAG});
+		manageContainerGET($URL);
+	}
+} else {
+    print "Status: 405 Method Not Allowed\n"; 
+    print "Content-type: text/plain\n\nYou can only request HEAD, OPTIONS or GET from this LD Platform Server\n\n";
+    exit 0;
+}
+
+
+
+sub manageContainerGET {
+    my $URL = shift;
+    my $store = RDF::Trine::Store::Memory->new();
+    my $model = RDF::Trine::Model->new($store);
+    my $ns = RDF::NS->new('20131205');   # check at runtime
+    die "can't set namespace $!\n" unless ($ns->SET(ldp => 'http://www.w3.org/ns/ldp#'));
+    
+    my $statement = statement($URL, $ns->rdf("type"), $ns->ldp("BasicContainer")); 
+    $model->add_statement($statement); 
+    $statement = statement($URL, $ns->dc("title"), $Configuration{'Title'}); 
+    $model->add_statement($statement); 
+    
+    callMetadataAccessor($URL, $model);
+    
+    serializeThis($model);
+
+}
+
+
+sub callMetadataAccessor {
+	my ($subject, $model) = @_;
+	require $Configuration{'DataSourceConnectorFile'};
+	my $package = $Configuration{'DataSourceConnectorPackage'};
+	my $method = $Configuration{'DataSourceMetadataMethod'};
+	no strict 'refs';
+	my $result = $package->$method;
+	$result = decode_json($result);
+	use strict 'refs';
+
+	foreach my $CDE(@CDE){  # @CDE exported from RD_Connect_Common.pm
+		next unless $result->{$CDE};
+		my ($namespace, $term) = split /:/, $CDE;
+		
+		if (ref($result->{$CDE}) =~ /ARRAY/) {
+			foreach (@{$result->{$CDE}}){
+				my $statement = statement($subject, $NS->$namespace($term), $_); 
+				$model->add_statement($statement);
+			}
+			next;
+		}
+		
+		my $statement = statement($subject,$NS->$namespace($term), $result->{$CDE}); 
+		$model->add_statement($statement);
+	}
+	
+	foreach my $meta_records ($result->{'meta_records'}) {
+		
+	}
+}
+
+#sub manageResourceGET {
+#    my $URL = shift;
+#    my $allele = $ENV{'PATH_INFO'};
+#    $allele =~ s/^\///;
+#    $allele = uri_escape($allele);
+#    my $store = RDF::Trine::Store::Memory->new();
+#    my $model = RDF::Trine::Model->new($store);
+#    my $ns = RDF::NS->new('20131205');   # check at runtime
+#    die "can't set namespace $!\n" unless ($ns->SET(ldp => 'http://www.w3.org/ns/ldp#'));
+#    die "can't set namespace $!\n" unless ($ns->SET(dcat => 'http://www.w3.org/ns/dcat#'));
+#    
+#    my $statement = statement($URL, $ns->rdf("type"), "http://antirrhinum.net/cgi-bin/ace/generic/model/DragonDB?name=$allele;class=Allele"); 
+#    $model->add_statement($statement); 
+#    $statement = statement($URL, $ns->dcat("distribution"), "http://antirrhinum.net/cgi-bin/ace/generic/xml/DragonDB?name=$allele;class=Allele"); 
+#    $model->add_statement($statement); 
+#    $statement = statement($URL, $ns->dcat("distribution"), "http://antirrhinum.net/cgi-bin/ace/generic/tree/DragonDB?name=$allele;class=Allele"); 
+#    $model->add_statement($statement); 
+#
+#    $statement = statement("http://antirrhinum.net/cgi-bin/ace/generic/xml/DragonDB?name=$allele;class=Allele",  $ns->rdf("type"), $ns->dcat('Distribution')); 
+#    $model->add_statement($statement); 
+#    $statement = statement("http://antirrhinum.net/cgi-bin/ace/generic/xml/DragonDB?name=$allele;class=Allele",  $ns->dc("format"), "application/xml"); 
+#    $model->add_statement($statement); 
+#    $statement = statement("http://antirrhinum.net/cgi-bin/ace/generic/xml/DragonDB?name=$allele;class=Allele",  $ns->dcat("downloadURL"), "http://antirrhinum.net/cgi-bin/ace/generic/xml/DragonDB?name=$allele;class=Allele"); 
+#    $model->add_statement($statement); 
+#
+#
+#    $statement = statement("http://antirrhinum.net/cgi-bin/ace/generic/tree/DragonDB?name=$allele;class=Allele",  $ns->rdf("type"), $ns->dcat('Distribution')); 
+#    $model->add_statement($statement); 
+#    $statement = statement("http://antirrhinum.net/cgi-bin/ace/generic/tree/DragonDB?name=$allele;class=Allele",  $ns->dc("format"), "text/html"); 
+#    $model->add_statement($statement); 
+#    $statement = statement("http://antirrhinum.net/cgi-bin/ace/generic/tree/DragonDB?name=$allele;class=Allele",  $ns->dcat("downloadURL"), "http://antirrhinum.net/cgi-bin/ace/generic/xml/DragonDB?name=$allele;class=Allele"); 
+#    $model->add_statement($statement); 
+#    
+#    serializeThis($model);
+#}
+
+    
