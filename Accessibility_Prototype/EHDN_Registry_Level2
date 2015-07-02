@@ -9,10 +9,7 @@ use JSON;
 use URI::Escape;
 
 
-
 my %Configuration = readConfiguration();  # read the configuration file (currently no sanity checking)
-
-
 
 unless ($ENV{REQUEST_METHOD}){  # if running from command line
         $ENV{REQUEST_METHOD} = "GET";
@@ -51,10 +48,12 @@ sub manageContainerGET {
     my $URL = shift;
     my $store = RDF::Trine::Store::Memory->new();
     my $model = RDF::Trine::Model->new($store);
+    my $ns = RDF::NS->new('20131205');   # check at runtime
+    die "can't set namespace $!\n" unless ($ns->SET(ldp => 'http://www.w3.org/ns/ldp#'));
     
-    my $statement = statement($URL, $NS->rdf("type"), $NS->ldp("BasicContainer")); 
+    my $statement = statement($URL, $ns->rdf("type"), $ns->ldp("BasicContainer")); 
     $model->add_statement($statement); 
-    $statement = statement($URL, $NS->dc("title"), $Configuration{'Title'}); 
+    $statement = statement($URL, $ns->dc("title"), $Configuration{'Title'}); 
     $model->add_statement($statement); 
     
     callMetadataAccessor($URL, $model);
@@ -90,9 +89,40 @@ sub callMetadataAccessor {
 		$model->add_statement($statement);
 	}
 	
-	foreach my $meta_records ($result->{'meta_records'}) {
+	foreach my $meta_records (@{$result->{'database:records'}}) {
+	    my $statement = statement($subject, $NS->ldp("contains"), $URL."/".uri_escape($meta_records)); 
+	    $model->add_statement($statement);         
+
 		
 	}
+}
+
+sub manageResourceGET {
+    my $URL = shift;
+    my $record = $ENV{'PATH_INFO'};
+    $record =~ s/^\///;
+    my $store = RDF::Trine::Store::Memory->new();
+    my $model = RDF::Trine::Model->new($store);
+    
+    my $statement = statement($URL, $NS->rdf("type"), $NS->edam("data_0006")); 
+    $model->add_statement($statement); 
+    $statement = statement($URL, $NS->rdf("type"), $NS->sio("SIO_000088")); 
+    $model->add_statement($statement); 
+    $statement = statement($URL, $NS->dcat("distribution"), "http://biordf.org/cgi-bin/RD_Connect/patient_record/$record"); 
+    $model->add_statement($statement); 
+    
+    
+
+    $statement = statement("http://biordf.org/cgi-bin/RD_Connect/patient_record/$record",  $NS->rdf("type"), $NS->dcat('Distribution')); 
+    $model->add_statement($statement); 
+    $statement = statement("http://biordf.org/cgi-bin/RD_Connect/patient_record/$record",  $NS->dc("format"), "application/xml"); 
+    $model->add_statement($statement); 
+    $statement = statement("http://biordf.org/cgi-bin/RD_Connect/patient_record/$record",  $NS->dcat("downloadURL"), "http://antirrhinum.net/cgi-bin/ace/generic/xml/DragonDB?name=$allele;class=Allele"); 
+    $model->add_statement($statement); 
+
+
+    
+    serializeThis($model);
 }
 
     

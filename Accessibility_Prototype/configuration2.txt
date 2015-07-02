@@ -1,0 +1,6 @@
+Title = The RD Connect Accessibility Server for the EHDN Registry
+DataSourceConnectorFile=./EHDN_DB_Connector_Level2.pm      # the filename
+DataSourceConnectorPackage= EHDN_DB_Connector_Level2       # the perl package name
+DataSourceMetadataMethod= getMetadata               # the method within your DataSourceConnectorPackage that returns the metadata in JSON
+DataSourceDataMethod=  getData                      # the method within your DataSourceConnectorPackage that returns the data in JSON
+ETAG => RD_Connect_EHDN_Registry_Server2             # a unique string of characters naming your server function

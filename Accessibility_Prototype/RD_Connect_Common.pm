@@ -1,14 +1,31 @@
 package RD_Connect_Common;
 
 use strict;
+use JSON;
 use vars qw(@ISA @EXPORT);
 use Exporter;
 
+use URI::Escape;
+use RDF::Trine;
+use RDF::Trine::Node::Resource;
+use RDF::Trine::Node::Literal;
+use RDF::Trine::Statement;
+use RDF::NS '20131205';              # check at compile time
+use JSON;	
+
+
 @ISA = qw( Exporter );
 
-@EXPORT = qw(@CDE statement printResourceHeader printContainerHeader manageHEAD serializeThis readConfiguration);
+@EXPORT = qw(@CDE statement printResourceHeader printContainerHeader manageHEAD serializeThis readConfiguration $NS);
 
+our $NS = RDF::NS->new('20131205'); 
+die "can't set namespace $!\n" unless ($NS->SET(ldp => 'http://www.w3.org/ns/ldp#'));
+die "can't set namespace $!\n" unless ($NS->SET(database => 'http://example.org/ns#'));
+die "can't set namespace $!\n" unless ($NS->SET(daml => "http://www.ksl.stanford.edu/projects/DAML/ksl-daml-desc.daml#"));
+die "can't set namespace $!\n" unless ($NS->SET(edam => "http://edamontology.org/"));
+die "can't set namespace $!\n" unless ($NS->SET(sio => "http://semanticscience.org/resource/"));
 
+# define the common data elements here, and their namespaces
 our @CDE = qw(
     dcat:contactPoint
     dcat:description
@@ -26,13 +43,17 @@ our @CDE = qw(
     dc:title
     dcat:updateDate
     void:entities
-    
-    database:records
+    daml:has-Technical-Lead
+    daml:has-Administrative-Contact
+    daml:has-Program-Manager
+    daml:has-Principle-Investigator
 
 );
 
 sub readConfiguration {
-	open(IN, "configuration.txt") || die "can't open configuration $!\n";
+	
+#	open(IN, "configuration.txt") || die "can't open configuration $!\n";
+	open(IN, "configuration2.txt") || die "can't open configuration $!\n";
 	my %configuration;
 	while (<IN>) {
 		my ($key, $value) = split /\=/, $_;
