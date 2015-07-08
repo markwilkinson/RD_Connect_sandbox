@@ -2,13 +2,13 @@
 package FAIR::Accessor;
 use lib "../";
 use base 'FAIR::AccessorBase';
-
-unless ($ENV{REQUEST_METHOD}){  # if running from command line
-        $ENV{REQUEST_METHOD} = "GET";
-        $ENV{'REQUEST_URI'} = "/this/thing";
-        $ENV{'SERVER_NAME'} = "example.net";
-	$ENV{'PATH_INFO'} = "/479-467-29X";
-}
+#
+#unless ($ENV{REQUEST_METHOD}){  # if running from command line
+#        $ENV{REQUEST_METHOD} = "GET";
+#        $ENV{'REQUEST_URI'} = "/this/thing";
+#        $ENV{'SERVER_NAME'} = "example.net";
+#	$ENV{'PATH_INFO'} = "/479-467-29X";
+#}
 
 sub handle_requests {
 

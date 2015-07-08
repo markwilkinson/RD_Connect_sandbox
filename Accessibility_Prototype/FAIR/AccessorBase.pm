@@ -175,14 +175,14 @@ sub callDataAccessor {
                                     
                   foreach my $value(@$values) {
                         if ($value =~ /^http:/) {  # if its a URL
-                              my $statement = statement("$URL",  $NS->$ns($pred), $value); 
+                              my $statement = statement($URL,  $NS->$ns($pred), $value); 
                               $model->add_statement($statement); 
                         } elsif ($value =~ /\S+:\S+/){  # if it looks like a qname tag
                               my ($vns,$vobj) = split /:/, $value;
-                              my $statement = statement("$URL",  $NS->$ns($pred), $NS->$vns($vobj)); 
+                              my $statement = statement($URL,  $NS->$ns($pred), $NS->$vns($vobj)); 
                               $model->add_statement($statement); 
                         } else {
-                              my $statement = statement("$URL",  $NS->$ns($pred), $value); 
+                              my $statement = statement($URL,  $NS->$ns($pred), $value); 
                               $model->add_statement($statement);                               
                         }
                   }

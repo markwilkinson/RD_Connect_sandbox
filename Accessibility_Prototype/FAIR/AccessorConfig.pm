@@ -109,10 +109,10 @@ sub BUILD {
     die "can't set namespace $!\n" unless ($NS->SET(example => 'http://example.org/ns#'));
 
     foreach my $abbreviation(keys $self->localNamespaces()){
-	print STDERR "working on $abbreviation\n\n";
-        my $namespace = $self->localNamespaces()->{$abbreviation};
-	print STDERR "namespace: $namespace\n\n";
-        print STDERR $NS->SET($abbreviation => $namespace);
+	my $namespace = $self->localNamespaces()->{$abbreviation};
+        unless ($NS->SET($abbreviation => $namespace)){
+	    print STDERR  "Failed to set namespace $abbreviation  ==  $namespace   Make sure your abbreviation has no capital letters (Perl library quirk!)";
+	}
     }
     
     $self->MetadataElements(\@CDE,$self->localMetadataElements() );  # concatinate local with common metadata elements
