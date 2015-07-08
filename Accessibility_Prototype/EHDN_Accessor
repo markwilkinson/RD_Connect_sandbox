@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-package ERDN_Accessor;  # this should be the same as your filename!
+package EHDN_Accessor;  # this should be the same as your filename!
 
 use strict;
 use warnings;
@@ -14,21 +14,21 @@ use JSON;
 use base 'FAIR::Accessor';
 
 my $config = {
-    title => 'ERDN Data Accessor',
+    title => 'European Huntington Disease Network Data Accessor',
     serviceTextualDescription => 'Server for some ERDN Data',
-    textualAccessibilityInfo => "This information requries no authentication",  # this could also be a $URI describing the accessibiltiy
+    textualAccessibilityInfo => "The information from this server requries no authentication",  # this could also be a $URI describing the accessibiltiy
     mechanizedAccessibilityInfo => "",  # this must be a URI to an RDF document
     textualLicenseInfo => "CC-BY",  # this could also be a URI to the license info
     mechanizedLicenseInfo =>  "", # this must be a URI to an RDF document
     baseURI => "", # I don't know what this is used for yet, but I have a feeling I will need it!
-    ETAG_Base => "ERDN_Accessor_For_RegInfo", # this is a unique identificaiton string for the service (required by the LDP specification)
-    localNamespaces => {erdn => 'http://erdn.org/some/items/',
-                        erdnpred => 'http://erdn.org/some/predicates/'},  # add a few new namespaces to the list of known namespaces....
+    ETAG_Base => "EHDN_Accessor_For_RegInfo", # this is a unique identificaiton string for the service (required by the LDP specification)
+    localNamespaces => {ehdn => 'http://ehdn.org/some/items/',
+                        ehdnpred => 'http://ehdn.org/some/predicates/'},  # add a few new namespaces to the list of known namespaces....
     localMetadataElements => [qw(erdnpred:fromHospital erdnpred:lastevaluatedDate) ],  # things that we use in addition to common metadata elements
 
 };
 
-my $service = ERDN_Accessor->new(%$config);
+my $service = EHDN_Accessor->new(%$config);
 
 # start daemon
 $service->handle_requests;
@@ -68,7 +68,7 @@ sub get_all_meta_URIs {
                     'dcat:language' => 'en',
                     'dcat:publisher' => 'http://www.euro-hd.net',
                     'dcat:temporal' => 'http://reference.data.gov.uk/id/quarter/2006-Q1',  # look at this!!  It doesn't have to be this complex, but it can be!
-                    'dcat:theme'  => 'http://example.org/skos/definition/of/theme',  # this is the URI to a SKOS Concept Scheme
+                    'dcat:theme'  => 'http://biordf.org/DataFairPort/ConceptSchemes/Huntingtons.rdf',  # this is the URI to a SKOS Concept Scheme
                     'daml:has-Technical-Lead' => "Summer Student Joe",
                     'daml:has-Administrative-Contact' => "John Doe",
                     'daml:has-Program-Manager' => "Jane Doe",
@@ -158,7 +158,7 @@ sub extractDataFromSpreadsheet{
           $metadata->{'dcat:releaseDate'} = $cell->value;
           
         $cell = $sheet->get_cell($row, 3);
-          $metadata->{'erdnpred:enrollmentState'} = $cell->value;
+          $metadata->{'ehdnpred:enrollmentState'} = $cell->value;
         
         last;
     }

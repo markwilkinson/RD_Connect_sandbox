@@ -108,7 +108,7 @@ sub BUILD {
     die "can't set namespace $!\n" unless ($NS->SET(sio => "http://semanticscience.org/resource/"));
     die "can't set namespace $!\n" unless ($NS->SET(example => 'http://example.org/ns#'));
 
-    foreach my $abbreviation(keys $self->localNamespaces()){
+    foreach my $abbreviation(keys %{$self->localNamespaces()}){
 	my $namespace = $self->localNamespaces()->{$abbreviation};
         unless ($NS->SET($abbreviation => $namespace)){
 	    print STDERR  "Failed to set namespace $abbreviation  ==  $namespace   Make sure your abbreviation has no capital letters (Perl library quirk!)";
