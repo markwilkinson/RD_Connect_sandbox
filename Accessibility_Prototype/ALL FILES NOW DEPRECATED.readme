@@ -1,0 +1,25 @@
+Hi all RD Connect Folks!
+
+All of the files in this repository should now be considered deprecated!!!   
+
+Pleae check-out and use the equivalent files from the DataFairPort repository:
+
+https://github.com/markwilkinson/DataFairPort/tree/master/Libraries/Perl/FAIR
+
+There will be a gzip file in there that creates a Makefile-installable directory tree 
+(e.g. https://github.com/markwilkinson/DataFairPort/blob/master/Libraries/Perl/FAIR/FAIR-Data-0.215.tar.gz  but
+you should look for the latest one)
+
+The working example of the RD Connect EHDN Accessor (the one I demonstrated at the meeting) is here:
+https://github.com/markwilkinson/DataFairPort/tree/master/Libraries/Perl/FAIR/examples/Accessors
+
+The example (using the most up-to-date libraries) is still running on my server here:
+
+http://biordf.org/cgi-bin/RD_Connect/EHDN_Accessor
+
+You are welcome to play with it :-)
+
+Best wishes!  Contact me with any questions or concerns!  markw@illuminae.com
+
+Mark
+
